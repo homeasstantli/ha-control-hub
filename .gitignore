@@ -11,6 +11,7 @@ config/
 
 # Firebase
 firebase/functions/node_modules/
+firebase/functions/.env
 firebase/.firebase/
 *-debug.log
 .runtimeconfig.json

@@ -41,43 +41,50 @@ firebase/                        Firebase project: rules + pairing Cloud Functio
 
 ## Part 1 — Firebase setup
 
-1. Create a Firebase project and enable **Authentication** (no sign-in provider
-   needed — custom tokens only), **Cloud Firestore**, and the **Realtime
-   Database**.
-2. Grab your **Web API key**: Project settings → General → "Web API Key".
-3. Deploy rules and the pairing function:
+Prerequisites: a Firebase project with **Cloud Firestore** and the **Realtime
+Database** provisioned, and the project on the **Blaze (pay-as-you-go) plan** —
+Cloud Functions cannot be deployed on the free Spark plan. Auth needs no sign-in
+provider; the function only mints custom tokens.
+
+1. Point the CLI at your project (a `.firebaserc` with `default: ha-github` is
+   already committed):
 
    ```bash
    cd firebase
-   npm --prefix functions install
    firebase use <your-project-id>
-   firebase functions:config:set   # (Gen-2) prefer env vars below
-   firebase deploy --only firestore:rules,database,functions
    ```
 
-   Set these environment variables for the function (Console → Functions →
-   `redeemPairingCode` → Edit, or in `firebase.json` / a `.env` file):
+2. Put your Web API key and RTDB URL in `functions/.env` (copy from
+   `functions/.env.example`). Get the values with:
 
-   | Variable                     | Value                                            |
-   | ---------------------------- | ------------------------------------------------ |
-   | `CONTROL_HUB_WEB_API_KEY`    | your Web API key                                 |
-   | `CONTROL_HUB_DATABASE_URL`   | `https://<project>-default-rtdb.firebaseio.com`  |
-
-4. Create a pairing code document (from an admin script or your app):
-
-   ```js
-   const { getFirestore, FieldValue, Timestamp } = require("firebase-admin/firestore");
-   await getFirestore().collection("pairingCodes").doc("ABCD-1234").set({
-     hubId: "home-hub",
-     used: false,
-     createdAt: FieldValue.serverTimestamp(),
-     expiresAt: Timestamp.fromMillis(Date.now() + 15 * 60 * 1000),
-   });
+   ```bash
+   firebase apps:sdkconfig WEB
    ```
 
-The function's HTTPS URL looks like
-`https://us-central1-<project>.cloudfunctions.net/redeemPairingCode` — that is the
-**Setup URL** you enter in Home Assistant.
+   | Variable                   | Value                                           |
+   | -------------------------- | ----------------------------------------------- |
+   | `CONTROL_HUB_WEB_API_KEY`  | `apiKey` from the SDK config                    |
+   | `CONTROL_HUB_DATABASE_URL` | `https://<project>-default-rtdb.firebaseio.com` |
+
+3. Deploy rules, then the function:
+
+   ```bash
+   npm --prefix functions install
+   firebase deploy --only firestore:rules,database
+   firebase deploy --only functions
+   ```
+
+4. Create a pairing code. With `gcloud auth application-default login` done, or a
+   service-account JSON in `GOOGLE_APPLICATION_CREDENTIALS`:
+
+   ```bash
+   node functions/scripts/create-pairing-code.js home-hub 15
+   # -> Pairing code for "home-hub" (expires in 15 min): ABCD-EFGH
+   ```
+
+After deploy, the function URL is printed — it looks like
+`https://us-central1-<project>.cloudfunctions.net/redeemPairingCode` (or a
+`run.app` URL for gen-2). That is the **Setup URL** you enter in Home Assistant.
 
 ## Part 2 — Install in Home Assistant (HACS)
 
