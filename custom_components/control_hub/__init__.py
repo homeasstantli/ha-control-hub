@@ -11,6 +11,7 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
@@ -43,6 +44,8 @@ from .pairing import async_create_pairing_code
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR]
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 _SET_CONFIG_SCHEMA = vol.Schema(
     {
         vol.Optional(ATTR_PATH): cv.string,
@@ -58,13 +61,18 @@ _PUSH_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Register the local pairing endpoint and code-issuing action.
+@callback
+def _register_local_pairing(hass: HomeAssistant) -> None:
+    """Register the pairing endpoint + action once (idempotent).
 
-    This works with no config entry, so the GitHub Pages control website can be
-    used even without the Firebase side configured.
+    Works with no config entry, so the GitHub Pages control website can be used
+    even without the Firebase side configured. Add ``control_hub:`` to
+    configuration.yaml for the local-only case.
     """
     hass.data.setdefault(DOMAIN, {})
+    if hass.services.has_service(DOMAIN, SERVICE_CREATE_PAIRING_CODE):
+        return
+
     hass.http.register_view(ControlHubPairView())
 
     async def _handle_create_pairing_code(call: ServiceCall) -> ServiceResponse:
@@ -76,11 +84,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _handle_create_pairing_code,
         supports_response=SupportsResponse.ONLY,
     )
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the integration from YAML (only ``control_hub:`` with no keys)."""
+    _register_local_pairing(hass)
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Control Hub from a config entry."""
+    _register_local_pairing(hass)
     session = async_get_clientsession(hass)
     hub_key = entry.data[CONF_HUB_KEY]
 
