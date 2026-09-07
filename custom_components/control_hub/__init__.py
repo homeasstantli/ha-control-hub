@@ -18,10 +18,11 @@ from .const import (
     CONF_API_KEY,
     CONF_DATABASE_URL,
     CONF_FIRESTORE_PATH,
-    CONF_HUB_ID,
+    CONF_HUB_KEY,
     CONF_PROJECT_ID,
     CONF_REFRESH_TOKEN,
     CONF_RTDB_PATH,
+    CONF_UID,
     DEFAULT_FIRESTORE_PATH,
     DEFAULT_RTDB_PATH,
     DOMAIN,
@@ -51,16 +52,18 @@ _PUSH_DATA_SCHEMA = vol.Schema(
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Control Hub from a config entry."""
     session = async_get_clientsession(hass)
-    hub_id = entry.data[CONF_HUB_ID]
+    hub_key = entry.data[CONF_HUB_KEY]
 
+    client = FirebaseClient(
+        session,
+        project_id=entry.data[CONF_PROJECT_ID],
+        api_key=entry.data[CONF_API_KEY],
+        database_url=entry.data[CONF_DATABASE_URL],
+        hub_key=hub_key,
+        refresh_token=entry.data[CONF_REFRESH_TOKEN],
+        uid=entry.data.get(CONF_UID),
+    )
     try:
-        client = FirebaseClient(
-            session,
-            project_id=entry.data[CONF_PROJECT_ID],
-            api_key=entry.data[CONF_API_KEY],
-            database_url=entry.data[CONF_DATABASE_URL],
-            refresh_token=entry.data[CONF_REFRESH_TOKEN],
-        )
         await client.async_check_auth()
     except FirebaseAuthError as err:
         raise ConfigEntryAuthFailed(str(err)) from err
@@ -69,8 +72,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     firestore_path = entry.data.get(
         CONF_FIRESTORE_PATH, DEFAULT_FIRESTORE_PATH
-    ).format(hub_id=hub_id)
-    rtdb_path = entry.data.get(CONF_RTDB_PATH, DEFAULT_RTDB_PATH).format(hub_id=hub_id)
+    ).format(hub_key=hub_key)
+    rtdb_path = entry.data.get(CONF_RTDB_PATH, DEFAULT_RTDB_PATH).format(hub_key=hub_key)
 
     coordinator = ControlHubCoordinator(
         hass, entry, client, firestore_path, rtdb_path
@@ -103,6 +106,10 @@ def _register_services(hass: HomeAssistant) -> None:
     def _coordinators() -> list[ControlHubCoordinator]:
         return list(hass.data.get(DOMAIN, {}).values())
 
+    async def _refresh_all() -> None:
+        for coordinator in _coordinators():
+            await coordinator.async_request_refresh()
+
     async def _handle_set_config(call: ServiceCall) -> None:
         path = call.data.get(ATTR_PATH)
         for coordinator in _coordinators():
@@ -118,10 +125,6 @@ def _register_services(hass: HomeAssistant) -> None:
             else:
                 await coordinator.client.async_push_rtdb(path, call.data[ATTR_DATA])
         await _refresh_all()
-
-    async def _refresh_all() -> None:
-        for coordinator in _coordinators():
-            await coordinator.async_request_refresh()
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_CONFIG, _handle_set_config, schema=_SET_CONFIG_SCHEMA

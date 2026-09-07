@@ -13,27 +13,29 @@ from .const import (
     CONF_API_KEY,
     CONF_DATABASE_URL,
     CONF_FIRESTORE_PATH,
-    CONF_HUB_ID,
-    CONF_PAIRING_CODE,
+    CONF_HUB_KEY,
     CONF_PROJECT_ID,
     CONF_REFRESH_TOKEN,
     CONF_RTDB_PATH,
-    CONF_SETUP_URL,
+    CONF_UID,
     DEFAULT_FIRESTORE_PATH,
     DEFAULT_RTDB_PATH,
     DOMAIN,
+    MIN_HUB_KEY_LENGTH,
 )
 from .firebase import (
     FirebaseAuthError,
+    FirebaseClaimError,
     FirebaseClient,
     FirebaseError,
-    redeem_pairing_code,
 )
 
 STEP_USER_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_SETUP_URL): str,
-        vol.Required(CONF_PAIRING_CODE): str,
+        vol.Required(CONF_PROJECT_ID): str,
+        vol.Required(CONF_API_KEY): str,
+        vol.Required(CONF_DATABASE_URL): str,
+        vol.Required(CONF_HUB_KEY): str,
         vol.Optional(CONF_FIRESTORE_PATH, default=DEFAULT_FIRESTORE_PATH): str,
         vol.Optional(CONF_RTDB_PATH, default=DEFAULT_RTDB_PATH): str,
     }
@@ -41,7 +43,7 @@ STEP_USER_SCHEMA = vol.Schema(
 
 
 class ControlHubConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle the pairing-code based config flow."""
+    """Anonymous-auth + hub-key config flow."""
 
     VERSION = 1
 
@@ -51,39 +53,42 @@ class ControlHubConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            session = async_get_clientsession(self.hass)
-            try:
-                pairing = await redeem_pairing_code(
-                    session,
-                    user_input[CONF_SETUP_URL],
-                    user_input[CONF_PAIRING_CODE],
-                )
-                client = await FirebaseClient.async_from_custom_token(
-                    session,
-                    project_id=pairing.project_id,
-                    api_key=pairing.api_key,
-                    database_url=pairing.database_url,
-                    custom_token=pairing.custom_token,
-                )
-            except FirebaseAuthError:
-                errors["base"] = "invalid_code"
-            except FirebaseError:
-                errors["base"] = "cannot_connect"
+            hub_key = user_input[CONF_HUB_KEY].strip()
+            if len(hub_key) < MIN_HUB_KEY_LENGTH:
+                errors[CONF_HUB_KEY] = "key_too_short"
             else:
-                await self.async_set_unique_id(pairing.hub_id)
+                await self.async_set_unique_id(hub_key)
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=f"Control Hub {pairing.hub_id}",
-                    data={
-                        CONF_HUB_ID: pairing.hub_id,
-                        CONF_PROJECT_ID: pairing.project_id,
-                        CONF_API_KEY: pairing.api_key,
-                        CONF_DATABASE_URL: pairing.database_url,
-                        CONF_REFRESH_TOKEN: client.refresh_token,
-                        CONF_FIRESTORE_PATH: user_input[CONF_FIRESTORE_PATH],
-                        CONF_RTDB_PATH: user_input[CONF_RTDB_PATH],
-                    },
-                )
+                session = async_get_clientsession(self.hass)
+                try:
+                    client = await FirebaseClient.async_sign_in_anonymous(
+                        session,
+                        project_id=user_input[CONF_PROJECT_ID].strip(),
+                        api_key=user_input[CONF_API_KEY].strip(),
+                        database_url=user_input[CONF_DATABASE_URL].strip(),
+                        hub_key=hub_key,
+                    )
+                    await client.async_claim()
+                except FirebaseAuthError:
+                    errors["base"] = "invalid_auth"
+                except FirebaseClaimError:
+                    errors["base"] = "claim_failed"
+                except FirebaseError:
+                    errors["base"] = "cannot_connect"
+                else:
+                    return self.async_create_entry(
+                        title=f"Control Hub ({hub_key})",
+                        data={
+                            CONF_HUB_KEY: hub_key,
+                            CONF_PROJECT_ID: user_input[CONF_PROJECT_ID].strip(),
+                            CONF_API_KEY: user_input[CONF_API_KEY].strip(),
+                            CONF_DATABASE_URL: user_input[CONF_DATABASE_URL].strip(),
+                            CONF_REFRESH_TOKEN: client.refresh_token,
+                            CONF_UID: client.uid,
+                            CONF_FIRESTORE_PATH: user_input[CONF_FIRESTORE_PATH],
+                            CONF_RTDB_PATH: user_input[CONF_RTDB_PATH],
+                        },
+                    )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_SCHEMA, errors=errors

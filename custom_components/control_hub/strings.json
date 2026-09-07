@@ -3,21 +3,25 @@
     "step": {
       "user": {
         "title": "Connect Control Hub",
-        "description": "Enter the setup URL of your deployed pairing Cloud Function and the one-time pairing code shown by your app.",
+        "description": "Enter your Firebase project details and a hub key. The hub key is a long random secret you choose (12+ characters) and also give to your app/site. Home Assistant signs in anonymously and claims it.",
         "data": {
-          "setup_url": "Setup URL",
-          "pairing_code": "Pairing code",
+          "project_id": "Firebase project ID",
+          "api_key": "Web API key",
+          "database_url": "Realtime Database URL",
+          "hub_key": "Hub key",
           "firestore_path": "Firestore config path",
           "rtdb_path": "Realtime Database state path"
         }
       }
     },
     "error": {
-      "invalid_code": "The pairing code was rejected or has expired.",
-      "cannot_connect": "Could not reach Firebase. Check your network and try again."
+      "key_too_short": "The hub key must be at least 12 characters.",
+      "invalid_auth": "Firebase rejected the API key, or Anonymous sign-in is not enabled.",
+      "claim_failed": "This hub key is already claimed by another user or is marked invalid.",
+      "cannot_connect": "Could not reach Firebase. Check your network and the Realtime Database URL."
     },
     "abort": {
-      "already_configured": "This hub is already configured."
+      "already_configured": "This hub key is already configured."
     }
   },
   "entity": {

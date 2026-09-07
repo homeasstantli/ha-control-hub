@@ -1,12 +1,14 @@
 # Control Hub
 
-A Home Assistant integration that pairs your instance to a **Firebase** project
-with a one-time **pairing code** and uses **Cloud Firestore** + the **Realtime
-Database** as a configuration and data store.
+A Home Assistant integration that connects your instance to a **Firebase**
+project used as a configuration and data store — on the **free Spark plan**,
+with **no Cloud Functions** and **no service-account keys**.
 
-- Pairing-code setup flow (no service-account keys pasted into HA)
-- Reads a config document from Firestore and a state node from the RTDB
+- Signs in with Firebase **Anonymous Auth** and claims a *hub key* you choose
+- Reads a config document from **Cloud Firestore** and a state node from the
+  **Realtime Database**
 - `control_hub.set_config` and `control_hub.push_data` services to write back
 - Sensors for config size / last sync and a connectivity binary sensor
 
-See the [README](https://github.com/homeasstantli/ha-control-hub) for Firebase setup.
+See the [README](https://github.com/homeasstantli/ha-control-hub) for the
+one-time Firebase setup (enable Anonymous auth, deploy the security rules).

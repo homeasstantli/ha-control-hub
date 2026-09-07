@@ -16,10 +16,10 @@ class ControlHubEntity(CoordinatorEntity[ControlHubCoordinator]):
 
     def __init__(self, coordinator: ControlHubCoordinator, key: str) -> None:
         super().__init__(coordinator)
-        hub_id = coordinator.entry.data["hub_id"]
-        self._attr_unique_id = f"{hub_id}_{key}"
+        hub_key = coordinator.entry.data["hub_key"]
+        self._attr_unique_id = f"{hub_key}_{key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, hub_id)},
+            identifiers={(DOMAIN, hub_key)},
             name=coordinator.entry.title,
             manufacturer="Control Hub",
             model="Firebase-backed hub",

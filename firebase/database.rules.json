@@ -1,9 +1,24 @@
 {
   "rules": {
     "hubs": {
-      "$hubId": {
-        ".read": "auth != null && auth.uid === $hubId",
-        ".write": "auth != null && auth.uid === $hubId"
+      "$key": {
+        ".read": "auth != null && data.child('uid').val() === auth.uid",
+        "valid": {
+          ".read": "auth != null",
+          ".write": "auth != null && newData.val() === true && (!data.exists() || data.val() === true)"
+        },
+        "uid": {
+          ".read": "auth != null",
+          ".write": "auth != null && newData.val() === auth.uid && (!data.exists() || data.val() === auth.uid) && root.child('hubs').child($key).child('valid').val() === true"
+        },
+        "state": {
+          ".read": "auth != null && root.child('hubs').child($key).child('uid').val() === auth.uid",
+          ".write": "auth != null && root.child('hubs').child($key).child('uid').val() === auth.uid"
+        },
+        "data": {
+          ".read": "auth != null && root.child('hubs').child($key).child('uid').val() === auth.uid",
+          ".write": "auth != null && root.child('hubs').child($key).child('uid').val() === auth.uid"
+        }
       }
     }
   }
