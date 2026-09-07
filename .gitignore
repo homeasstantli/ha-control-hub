@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# HA / dev
+.HA_VERSION
+*.log
+config/
+
+# Firebase
+firebase/functions/node_modules/
+firebase/.firebase/
+*-debug.log
+.runtimeconfig.json
+serviceAccountKey*.json
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/

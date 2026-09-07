@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect Control Hub",
+        "description": "Enter the setup URL of your deployed pairing Cloud Function and the one-time pairing code shown by your app.",
+        "data": {
+          "setup_url": "Setup URL",
+          "pairing_code": "Pairing code",
+          "firestore_path": "Firestore config path",
+          "rtdb_path": "Realtime Database state path"
+        }
+      }
+    },
+    "error": {
+      "invalid_code": "The pairing code was rejected or has expired.",
+      "cannot_connect": "Could not reach Firebase. Check your network and try again."
+    },
+    "abort": {
+      "already_configured": "This hub is already configured."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "config_keys": { "name": "Config keys" },
+      "last_sync": { "name": "Last sync" }
+    },
+    "binary_sensor": {
+      "connected": { "name": "Connected" }
+    }
+  }
+}

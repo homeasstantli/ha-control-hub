@@ -1,0 +1,33 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  release-zip:
+    name: Attach integration zip
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set version from tag
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          tmp=$(mktemp)
+          jq --arg v "$version" '.version = $v' \
+            custom_components/control_hub/manifest.json > "$tmp"
+          mv "$tmp" custom_components/control_hub/manifest.json
+
+      - name: Create zip
+        run: |
+          cd custom_components/control_hub
+          zip -r control_hub.zip .
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: custom_components/control_hub/control_hub.zip

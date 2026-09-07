@@ -1,0 +1,47 @@
+set_config:
+  name: Set config
+  description: Merge fields into the hub's Cloud Firestore config document.
+  fields:
+    path:
+      name: Path
+      description: Firestore document path. Defaults to the hub's config document.
+      required: false
+      example: hubs/my-hub/config
+      selector:
+        text:
+    data:
+      name: Data
+      description: Object of fields to merge into the document.
+      required: true
+      example: '{"mode": "away", "target_temp": 19}'
+      selector:
+        object:
+
+push_data:
+  name: Push data
+  description: Write a value to the Realtime Database (append) or Firestore (merge).
+  fields:
+    path:
+      name: Path
+      description: Database path to write to.
+      required: true
+      example: hubs/my-hub/events
+      selector:
+        text:
+    data:
+      name: Data
+      description: Object payload to store.
+      required: true
+      example: '{"event": "door_opened", "at": "2026-09-06T12:00:00Z"}'
+      selector:
+        object:
+    target:
+      name: Target
+      description: Which database to write to.
+      required: false
+      default: rtdb
+      selector:
+        select:
+          options:
+            - rtdb
+            - firestore

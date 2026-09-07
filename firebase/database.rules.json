@@ -1,0 +1,10 @@
+{
+  "rules": {
+    "hubs": {
+      "$hubId": {
+        ".read": "auth != null && auth.uid === $hubId",
+        ".write": "auth != null && auth.uid === $hubId"
+      }
+    }
+  }
+}
