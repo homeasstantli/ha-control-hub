@@ -17,6 +17,14 @@ set_config:
       selector:
         object:
 
+create_pairing_code:
+  name: Create pairing code
+  description: >
+    Mint a one-time code (valid 5 minutes) that the Control Hub website can
+    exchange at /api/control_hub/pair for a long-lived Home Assistant access
+    token. The token belongs to a dedicated "Control Hub Web" user.
+  fields: {}
+
 push_data:
   name: Push data
   description: Write a value to the Realtime Database (append) or Firestore (merge).

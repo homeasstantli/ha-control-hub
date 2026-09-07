@@ -6,10 +6,16 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_DATA,
@@ -26,11 +32,14 @@ from .const import (
     DEFAULT_FIRESTORE_PATH,
     DEFAULT_RTDB_PATH,
     DOMAIN,
+    SERVICE_CREATE_PAIRING_CODE,
     SERVICE_PUSH_DATA,
     SERVICE_SET_CONFIG,
 )
 from .coordinator import ControlHubCoordinator
 from .firebase import FirebaseAuthError, FirebaseClient, FirebaseError
+from .http import ControlHubPairView
+from .pairing import async_create_pairing_code
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR]
 
@@ -47,6 +56,27 @@ _PUSH_DATA_SCHEMA = vol.Schema(
         vol.Optional(ATTR_TARGET, default="rtdb"): vol.In(["rtdb", "firestore"]),
     }
 )
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Register the local pairing endpoint and code-issuing action.
+
+    This works with no config entry, so the GitHub Pages control website can be
+    used even without the Firebase side configured.
+    """
+    hass.data.setdefault(DOMAIN, {})
+    hass.http.register_view(ControlHubPairView())
+
+    async def _handle_create_pairing_code(call: ServiceCall) -> ServiceResponse:
+        return await async_create_pairing_code(hass)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_CREATE_PAIRING_CODE,
+        _handle_create_pairing_code,
+        supports_response=SupportsResponse.ONLY,
+    )
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

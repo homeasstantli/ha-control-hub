@@ -30,6 +30,16 @@ FIRESTORE_BASE = "https://firestore.googleapis.com/v1"
 # Services
 SERVICE_SET_CONFIG = "set_config"
 SERVICE_PUSH_DATA = "push_data"
+SERVICE_CREATE_PAIRING_CODE = "create_pairing_code"
 ATTR_PATH = "path"
 ATTR_DATA = "data"
 ATTR_TARGET = "target"  # "firestore" | "rtdb"
+
+# Local pairing (GitHub Pages website -> Home Assistant API)
+PAIR_VIEW_URL = "/api/control_hub/pair"
+DATA_PAIRING_CODES = "pairing_codes"
+PAIRING_CODE_TTL = 300  # seconds
+PAIRING_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
+PAIRING_CODE_LENGTH = 8
+WEB_USER_NAME = "Control Hub Web"
+WEB_USER_STORAGE_KEY = f"{DOMAIN}.web_user"

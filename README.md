@@ -34,12 +34,20 @@ API token: whoever holds it, and claims it first, owns that hub's data.
 
 ```
 custom_components/control_hub/   The Home Assistant integration
+docs/                            Static control website (GitHub Pages)
 firebase/                        Security rules for Firestore + the RTDB
   firestore.rules
   database.rules.json
   firebase.json / .firebaserc
 .github/workflows/               hassfest + HACS validation, release zipper
 ```
+
+The integration has two independent halves:
+
+* **Firebase side** (Parts 1–2) — Firestore/RTDB as a config & data store.
+* **Local control website** (Part 3) — a GitHub Pages page that talks straight
+  to your Home Assistant API over the local network, paired with a one-time
+  code. Needs no Firebase.
 
 ## Part 1 — Firebase setup (free)
 
@@ -78,6 +86,50 @@ On submit, Home Assistant creates an anonymous user, writes
 `hubs/<key> = { valid: true, uid: <that user> }`, and from then on only that
 user can touch `hubs/<key>/**`.
 
+## Part 3 — Local control website (GitHub Pages)
+
+A static page under `docs/` that controls your **lights and switches** by
+talking directly to Home Assistant's REST API. No cloud, no Firebase.
+
+### One-time pairing
+
+1. In Home Assistant: **Developer Tools → Actions →** run
+   `control_hub.create_pairing_code`. The response contains an 8-character
+   `code`, valid **5 minutes**, single use.
+2. On the website, enter your Home Assistant URL and the code and press
+   **Pair**. The page calls `POST /api/control_hub/pair`, receives a
+   long-lived access token, and stores it in the browser's local storage.
+3. The token belongs to a dedicated non-admin **"Control Hub Web"** user
+   (auto-created). Revoke access any time from that user's page in
+   **Settings → People**, or from the token list.
+
+### Enable GitHub Pages
+
+Repo **Settings → Pages → Source: Deploy from a branch → `main` / `/docs`**.
+The site is then at `https://homeasstantli.github.io/ha-control-hub/`.
+
+### Make the browser reach Home Assistant
+
+The page and HA are different origins, so:
+
+* **CORS** — add your Pages origin to `configuration.yaml` and restart HA:
+
+  ```yaml
+  http:
+    cors_allowed_origins:
+      - https://homeasstantli.github.io
+  ```
+
+* **Mixed content** — a page served over `https://` (GitHub Pages) cannot call
+  a plain `http://homeassistant.local:8123`. Your options:
+  * Access Home Assistant over HTTPS (reverse proxy / Nabu Casa URL) and use
+    that URL when pairing, **or**
+  * Run the page locally instead of on Pages:
+    `cd docs && python3 -m http.server 8000`, open
+    `http://localhost:8000`, and pair with `http://localhost:8123`
+    (browsers allow `https`/`localhost` exceptions — and here both are local),
+    adding `http://localhost:8000` to `cors_allowed_origins`.
+
 ## Data model
 
 | Location                                  | Purpose                              |
@@ -99,6 +151,8 @@ Poll interval is 5 minutes. Paths are configurable in the setup form
 
 ### Services
 
+* **`control_hub.create_pairing_code`** — mint a one-time code for the local
+  control website (returns response data; no Firebase needed).
 * **`control_hub.set_config`** — merge fields into the Firestore config document
   (`path` optional, defaults to the hub's config doc).
 * **`control_hub.push_data`** — write to `rtdb` (append with generated key) or

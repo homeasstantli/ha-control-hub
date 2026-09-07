@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Control Hub</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --text: #1c1e21;
+    --muted: #6b7280;
+    --border: #e2e4e8;
+    --accent: #2563eb;
+    --accent-text: #ffffff;
+    --danger: #b91c1c;
+    --ok: #15803d;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14161a;
+      --card: #1e2127;
+      --text: #e6e7e9;
+      --muted: #9aa0a6;
+      --border: #2c2f36;
+      --accent: #3b82f6;
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 620px; margin: 0 auto; padding: 20px 16px 64px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em;
+       color: var(--muted); margin: 24px 0 8px; }
+  p.sub { color: var(--muted); margin: 0 0 20px; }
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; box-shadow: var(--shadow); padding: 16px;
+  }
+  label { display: block; font-weight: 600; margin: 12px 0 4px; font-size: 13px; }
+  input[type=text], input[type=url] {
+    width: 100%; padding: 10px 12px; font-size: 15px;
+    border: 1px solid var(--border); border-radius: 8px;
+    background: var(--bg); color: var(--text);
+  }
+  input#code { letter-spacing: .25em; text-transform: uppercase; font-family: ui-monospace, monospace; }
+  button {
+    font: inherit; font-weight: 600; cursor: pointer;
+    border: 1px solid var(--border); border-radius: 8px;
+    background: var(--card); color: var(--text); padding: 9px 14px;
+  }
+  button.primary { background: var(--accent); color: var(--accent-text); border-color: transparent; }
+  button:disabled { opacity: .5; cursor: default; }
+  .row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; border: 1px solid var(--border);
+    border-radius: 10px; background: var(--card); margin-bottom: 8px;
+    box-shadow: var(--shadow);
+  }
+  .row .name { flex: 1; min-width: 0; }
+  .row .name b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row .name span { color: var(--muted); font-size: 12px; }
+  .bright { width: 100%; margin-top: 8px; accent-color: var(--accent); }
+  .switch { position: relative; width: 46px; height: 26px; flex: none; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute; inset: 0; background: var(--border);
+    border-radius: 999px; transition: background .15s;
+  }
+  .slider::before {
+    content: ""; position: absolute; height: 20px; width: 20px; left: 3px; top: 3px;
+    background: #fff; border-radius: 50%; transition: transform .15s;
+  }
+  .switch input:checked + .slider { background: var(--accent); }
+  .switch input:checked + .slider::before { transform: translateX(20px); }
+  .topbar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .topbar .grow { flex: 1; }
+  .msg { padding: 10px 12px; border-radius: 8px; font-size: 14px; margin: 12px 0; }
+  .msg.err { background: rgba(185,28,28,.12); color: var(--danger); }
+  .msg.warn { background: rgba(202,138,4,.14); color: #a16207; }
+  .msg.ok { background: rgba(21,128,61,.12); color: var(--ok); }
+  code { font-family: ui-monospace, monospace; background: var(--bg); padding: 1px 5px; border-radius: 4px; }
+  footer { color: var(--muted); font-size: 12px; margin-top: 32px; text-align: center; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Control Hub</h1>
+  <p class="sub">Control your Home Assistant lights &amp; switches with a one-time code.</p>
+
+  <!-- SETUP -->
+  <section id="setup" class="card" hidden>
+    <label for="url">Home Assistant URL</label>
+    <input type="url" id="url" placeholder="http://homeassistant.local:8123" autocomplete="off" />
+    <label for="code">One-time code</label>
+    <input type="text" id="code" maxlength="8" placeholder="ABCD1234" autocomplete="off"
+           autocapitalize="characters" spellcheck="false" />
+    <div id="setupMsg"></div>
+    <div style="margin-top:14px; display:flex; gap:8px;">
+      <button class="primary" id="pairBtn">Pair</button>
+    </div>
+    <p class="sub" style="margin-top:16px; font-size:13px;">
+      In Home Assistant, run the action
+      <code>control_hub.create_pairing_code</code> (Developer Tools → Actions) to
+      get a code. It is valid for 5 minutes.
+    </p>
+  </section>
+
+  <!-- CONTROL -->
+  <section id="control" hidden>
+    <div class="topbar">
+      <span class="grow" style="color:var(--muted); font-size:13px;" id="haInfo"></span>
+      <button id="refreshBtn">Refresh</button>
+      <button id="unpairBtn">Unpair</button>
+    </div>
+    <div id="controlMsg"></div>
+    <div id="lights"></div>
+    <div id="switches"></div>
+  </section>
+
+  <footer>
+    Talks directly to your Home Assistant API. Nothing is sent anywhere else.
+  </footer>
+</main>
+
+<script>
+(() => {
+  "use strict";
+  const LS_KEY = "control_hub_v1";
+  const $ = (id) => document.getElementById(id);
+  let session = null;      // { baseUrl, token }
+  let timer = null;
+
+  const load = () => {
+    try { return JSON.parse(localStorage.getItem(LS_KEY) || "null"); }
+    catch { return null; }
+  };
+  const save = (s) => {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(s)); } catch {}
+  };
+  const clear = () => {
+    try { localStorage.removeItem(LS_KEY); } catch {}
+  };
+
+  const msg = (el, text, kind) => {
+    el.innerHTML = text ? `<div class="msg ${kind || "err"}">${text}</div>` : "";
+  };
+
+  const normUrl = (u) => u.trim().replace(/\/+$/, "");
+
+  const mixedContentRisk = (baseUrl) => {
+    if (location.protocol !== "https:") return false;
+    let host;
+    try { host = new URL(baseUrl).protocol === "http:" ? new URL(baseUrl).hostname : null; }
+    catch { return false; }
+    if (!host) return false;
+    return !["localhost", "127.0.0.1", "[::1]"].includes(host);
+  };
+
+  async function api(path, opts) {
+    const res = await fetch(session.baseUrl + path, {
+      ...opts,
+      headers: {
+        "Authorization": "Bearer " + session.token,
+        "Content-Type": "application/json",
+        ...(opts && opts.headers),
+      },
+    });
+    if (res.status === 401) { throw new Error("unauthorized"); }
+    if (!res.ok) { throw new Error("HTTP " + res.status); }
+    const ct = res.headers.get("content-type") || "";
+    return ct.includes("json") ? res.json() : res.text();
+  }
+
+  // ---- Pairing ----
+  async function pair() {
+    const baseUrl = normUrl($("url").value);
+    const code = $("code").value.trim().toUpperCase();
+    if (!baseUrl) return msg($("setupMsg"), "Enter your Home Assistant URL.");
+    if (code.length < 4) return msg($("setupMsg"), "Enter the code from Home Assistant.");
+
+    $("pairBtn").disabled = true;
+    msg($("setupMsg"), "Pairing…", "ok");
+    try {
+      const res = await fetch(baseUrl + "/api/control_hub/pair", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.message || ("HTTP " + res.status));
+      }
+      const data = await res.json();
+      session = { baseUrl, token: data.access_token };
+      save(session);
+      show();
+      refresh();
+    } catch (e) {
+      let hint = e.message;
+      if (e instanceof TypeError) {
+        hint = "Could not reach Home Assistant. Check the URL, and that "
+          + "<code>http.cors_allowed_origins</code> includes <code>"
+          + location.origin + "</code>."
+          + (mixedContentRisk(baseUrl)
+              ? " This page is HTTPS and your HA URL is HTTP — the browser blocks "
+                + "that unless HA uses HTTPS or you open this page from localhost."
+              : "");
+      }
+      msg($("setupMsg"), hint);
+    } finally {
+      $("pairBtn").disabled = false;
+    }
+  }
+
+  function unpair() {
+    clear();
+    session = null;
+    if (timer) { clearInterval(timer); timer = null; }
+    show();
+  }
+
+  // ---- Rendering ----
+  function friendly(s) {
+    return (s.attributes && s.attributes.friendly_name) || s.entity_id;
+  }
+
+  function renderRow(s) {
+    const domain = s.entity_id.split(".")[0];
+    const on = s.state === "on";
+    const row = document.createElement("div");
+    row.className = "row";
+
+    const name = document.createElement("div");
+    name.className = "name";
+    name.innerHTML = `<b></b><span>${s.entity_id} · ${s.state}</span>`;
+    name.querySelector("b").textContent = friendly(s);
+
+    const sw = document.createElement("label");
+    sw.className = "switch";
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = on;
+    cb.addEventListener("change", () => toggle(domain, s.entity_id, cb));
+    const sl = document.createElement("span");
+    sl.className = "slider";
+    sw.append(cb, sl);
+
+    row.append(name, sw);
+
+    if (domain === "light") {
+      const wrap = document.createElement("div");
+      wrap.style.width = "100%";
+      const rng = document.createElement("input");
+      rng.type = "range"; rng.min = "1"; rng.max = "100"; rng.className = "bright";
+      rng.value = on && s.attributes.brightness
+        ? Math.round((s.attributes.brightness / 255) * 100) : (on ? 100 : 1);
+      rng.disabled = !on;
+      let t;
+      rng.addEventListener("input", () => {
+        clearTimeout(t);
+        t = setTimeout(() => setBrightness(s.entity_id, rng.value), 250);
+      });
+      wrap.append(row, rng);
+      return wrap;
+    }
+    return row;
+  }
+
+  function renderList(containerId, heading, states) {
+    const c = $(containerId);
+    c.innerHTML = "";
+    if (!states.length) return;
+    const h = document.createElement("h2");
+    h.textContent = heading;
+    c.append(h);
+    states
+      .sort((a, b) => friendly(a).localeCompare(friendly(b)))
+      .forEach((s) => c.append(renderRow(s)));
+  }
+
+  async function refresh() {
+    if (!session) return;
+    try {
+      const states = await api("/api/states");
+      const lights = states.filter((s) => s.entity_id.startsWith("light."));
+      const switches = states.filter((s) => s.entity_id.startsWith("switch."));
+      renderList("lights", "Lights", lights);
+      renderList("switches", "Switches", switches);
+      msg($("controlMsg"), "", "");
+      $("haInfo").textContent = session.baseUrl;
+    } catch (e) {
+      if (e.message === "unauthorized") {
+        msg($("setupMsg"), "The saved token was rejected. Pair again.");
+        unpair();
+      } else {
+        msg($("controlMsg"), "Update failed: " + e.message);
+      }
+    }
+  }
+
+  async function toggle(domain, entity_id, cb) {
+    try {
+      await api(`/api/services/${domain}/toggle`, {
+        method: "POST",
+        body: JSON.stringify({ entity_id }),
+      });
+      setTimeout(refresh, 400);
+    } catch (e) {
+      cb.checked = !cb.checked;
+      msg($("controlMsg"), "Command failed: " + e.message);
+    }
+  }
+
+  async function setBrightness(entity_id, pct) {
+    try {
+      await api("/api/services/light/turn_on", {
+        method: "POST",
+        body: JSON.stringify({ entity_id, brightness_pct: Number(pct) }),
+      });
+    } catch (e) {
+      msg($("controlMsg"), "Command failed: " + e.message);
+    }
+  }
+
+  // ---- View switching ----
+  function show() {
+    const paired = !!session;
+    $("setup").hidden = paired;
+    $("control").hidden = !paired;
+    if (paired && !timer) {
+      timer = setInterval(() => {
+        if (!document.hidden) refresh();
+      }, 5000);
+    }
+  }
+
+  // ---- Init ----
+  $("pairBtn").addEventListener("click", pair);
+  $("code").addEventListener("keydown", (e) => { if (e.key === "Enter") pair(); });
+  $("refreshBtn").addEventListener("click", refresh);
+  $("unpairBtn").addEventListener("click", unpair);
+
+  session = load();
+  $("url").value = (session && session.baseUrl) || "http://homeassistant.local:8123";
+  show();
+  if (session) refresh();
+})();
+</script>
+</body>
+</html>
