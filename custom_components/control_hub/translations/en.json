@@ -24,6 +24,17 @@
       "already_configured": "This hub key is already configured."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Control website visibility",
+        "description": "Choose which lights and switches the local control website can see and control. Leave empty to expose every light and switch (the original behavior).",
+        "data": {
+          "exposed_entities": "Visible entities"
+        }
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "config_keys": { "name": "Config keys" },

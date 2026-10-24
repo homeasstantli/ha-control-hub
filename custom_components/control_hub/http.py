@@ -7,8 +7,9 @@ from http import HTTPStatus
 from aiohttp import web
 
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.core import HomeAssistant
 
-from .const import PAIR_VIEW_URL
+from .const import CONF_EXPOSED_ENTITIES, DOMAIN, ENTITIES_VIEW_URL, PAIR_VIEW_URL
 from .pairing import async_redeem_pairing_code
 
 
@@ -48,3 +49,43 @@ class ControlHubPairView(HomeAssistantView):
                 "ha_version": hass.config.as_dict().get("version"),
             }
         )
+
+
+def _exposed_entity_ids(hass: HomeAssistant) -> set[str] | None:
+    """Union of exposed entities across config entries.
+
+    Returns ``None`` if no entry has a filter configured, meaning "expose
+    everything" (the original, unfiltered behaviour).
+    """
+    entries = hass.config_entries.async_entries(DOMAIN)
+    configured = [e for e in entries if e.options.get(CONF_EXPOSED_ENTITIES)]
+    if not configured:
+        return None
+    allowed: set[str] = set()
+    for entry in configured:
+        allowed.update(entry.options[CONF_EXPOSED_ENTITIES])
+    return allowed
+
+
+class ControlHubEntitiesView(HomeAssistantView):
+    """GET -> the light/switch states the control website is allowed to see.
+
+    Honors the "exposed entities" picked in Control Hub's Options. If nothing
+    has been configured, falls back to every light/switch (same as before
+    this filter existed).
+    """
+
+    url = ENTITIES_VIEW_URL
+    name = "api:control_hub:entities"
+    requires_auth = True
+
+    async def get(self, request: web.Request) -> web.Response:
+        hass = request.app["hass"]
+        allowed = _exposed_entity_ids(hass)
+        states = [
+            s.as_dict()
+            for s in hass.states.async_all()
+            if s.domain in ("light", "switch")
+            and (allowed is None or s.entity_id in allowed)
+        ]
+        return self.json(states)

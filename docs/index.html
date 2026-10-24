@@ -387,7 +387,7 @@
   async function refresh() {
     if (!session) return;
     try {
-      const states = await api("/api/states");
+      const states = await api("/api/control_hub/entities");
       const lights = states.filter((s) => s.entity_id.startsWith("light."));
       const switches = states.filter((s) => s.entity_id.startsWith("switch."));
       renderSection("lights", "Lights", lights);

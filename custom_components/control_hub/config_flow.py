@@ -6,12 +6,22 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    EntitySelector,
+    EntitySelectorConfig,
+)
 
 from .const import (
     CONF_API_KEY,
     CONF_DATABASE_URL,
+    CONF_EXPOSED_ENTITIES,
     CONF_FIRESTORE_PATH,
     CONF_HUB_KEY,
     CONF_PROJECT_ID,
@@ -46,6 +56,10 @@ class ControlHubConfigFlow(ConfigFlow, domain=DOMAIN):
     """Anonymous-auth + hub-key config flow."""
 
     VERSION = 1
+
+    @staticmethod
+    def async_get_options_flow(entry: ConfigEntry) -> ControlHubOptionsFlow:
+        return ControlHubOptionsFlow()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -93,3 +107,23 @@ class ControlHubConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_SCHEMA, errors=errors
         )
+
+
+class ControlHubOptionsFlow(OptionsFlow):
+    """Pick which lights/switches the control website can see and control."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        current = self.config_entry.options.get(CONF_EXPOSED_ENTITIES, [])
+        schema = vol.Schema(
+            {
+                vol.Optional(CONF_EXPOSED_ENTITIES, default=current): EntitySelector(
+                    EntitySelectorConfig(domain=["light", "switch"], multiple=True)
+                ),
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=schema)

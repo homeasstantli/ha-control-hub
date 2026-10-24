@@ -16,6 +16,9 @@ CONF_UID = "uid"
 CONF_FIRESTORE_PATH = "firestore_path"
 CONF_RTDB_PATH = "rtdb_path"
 
+# Options entry keys
+CONF_EXPOSED_ENTITIES = "exposed_entities"
+
 # Defaults
 DEFAULT_FIRESTORE_PATH = "hubs/{hub_key}/data/config"
 DEFAULT_RTDB_PATH = "hubs/{hub_key}/state"
@@ -37,6 +40,7 @@ ATTR_TARGET = "target"  # "firestore" | "rtdb"
 
 # Local pairing (GitHub Pages website -> Home Assistant API)
 PAIR_VIEW_URL = "/api/control_hub/pair"
+ENTITIES_VIEW_URL = "/api/control_hub/entities"
 DATA_PAIRING_CODES = "pairing_codes"
 PAIRING_CODE_TTL = 300  # seconds
 PAIRING_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"

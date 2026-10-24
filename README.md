@@ -137,6 +137,15 @@ The token belongs to a dedicated non-admin **"Control Hub Web"** user
 (auto-created on first use). Revoke access any time from that user's page in
 **Settings → People**, or from its token list.
 
+### Limiting which entities it can see
+
+By default the website can see and control every `light.*` and `switch.*`
+entity. To limit it: open the Control Hub integration in **Settings → Devices
+& Services → Control Hub → Configure**, and pick the specific lights/switches
+to expose. Everything else is hidden from the website entirely — it's filtered
+server-side, so a stolen token still can't reach anything you didn't select.
+Clear the selection to go back to exposing everything.
+
 ## Data model
 
 | Location                                  | Purpose                              |

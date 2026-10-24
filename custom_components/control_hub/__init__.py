@@ -39,7 +39,7 @@ from .const import (
 )
 from .coordinator import ControlHubCoordinator
 from .firebase import FirebaseAuthError, FirebaseClient, FirebaseError
-from .http import ControlHubPairView
+from .http import ControlHubEntitiesView, ControlHubPairView
 from .pairing import async_create_pairing_code
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR]
@@ -74,6 +74,7 @@ def _register_local_pairing(hass: HomeAssistant) -> None:
         return
 
     hass.http.register_view(ControlHubPairView())
+    hass.http.register_view(ControlHubEntitiesView())
 
     async def _handle_create_pairing_code(call: ServiceCall) -> ServiceResponse:
         return await async_create_pairing_code(hass)
