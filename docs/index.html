@@ -112,6 +112,10 @@
       <code>control_hub.create_pairing_code</code> (Developer Tools → Actions) to
       get a code. It is valid for 5 minutes.
     </p>
+    <p class="sub" style="font-size:12px;">
+      The URL above is prefilled to this page's own address — if this page is
+      served from Home Assistant's <code>/local/</code> folder, leave it as is.
+    </p>
   </section>
 
   <!-- CONTROL -->
@@ -349,8 +353,14 @@
   $("refreshBtn").addEventListener("click", refresh);
   $("unpairBtn").addEventListener("click", unpair);
 
+  function defaultBaseUrl() {
+    // Same-origin (e.g. served from HA's own /local/ via config/www) -> prefill it.
+    if (location.origin && location.origin.startsWith("http")) return location.origin;
+    return "http://homeassistant.local:8123";
+  }
+
   session = load();
-  $("url").value = (session && session.baseUrl) || "http://homeassistant.local:8123";
+  $("url").value = (session && session.baseUrl) || defaultBaseUrl();
   show();
   if (session) refresh();
 })();

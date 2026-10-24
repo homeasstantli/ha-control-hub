@@ -1,4 +1,4 @@
-# Control Hub
+<img src="assets/logo.svg" alt="Control Hub" height="64">
 
 [![Validate](https://github.com/homeasstantli/ha-control-hub/actions/workflows/validate.yml/badge.svg)](https://github.com/homeasstantli/ha-control-hub/actions/workflows/validate.yml)
 [![hacs](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz)
@@ -34,7 +34,8 @@ API token: whoever holds it, and claims it first, owns that hub's data.
 
 ```
 custom_components/control_hub/   The Home Assistant integration
-docs/                            Static control website (GitHub Pages)
+docs/                            Static control website (copy into config/www/)
+assets/                          Logo / icon (SVG)
 firebase/                        Security rules for Firestore + the RTDB
   firestore.rules
   database.rules.json
@@ -86,33 +87,37 @@ On submit, Home Assistant creates an anonymous user, writes
 `hubs/<key> = { valid: true, uid: <that user> }`, and from then on only that
 user can touch `hubs/<key>/**`.
 
-## Part 3 — Local control website (GitHub Pages)
+## Part 3 — Local control website
 
-A static page under `docs/` that controls your **lights and switches** by
-talking directly to Home Assistant's REST API. No cloud, no Firebase.
+A static page (`docs/index.html`) that controls your **lights and switches**
+by talking directly to Home Assistant's REST API. No cloud, no Firebase.
 
-### One-time pairing
+### Recommended: host it from Home Assistant's own `www` folder
 
-1. In Home Assistant: **Developer Tools → Actions →** run
-   `control_hub.create_pairing_code`. The response contains an 8-character
-   `code`, valid **5 minutes**, single use.
-2. On the website, enter your Home Assistant URL and the code and press
-   **Pair**. The page calls `POST /api/control_hub/pair`, receives a
-   long-lived access token, and stores it in the browser's local storage.
-3. The token belongs to a dedicated non-admin **"Control Hub Web"** user
-   (auto-created). Revoke access any time from that user's page in
-   **Settings → People**, or from the token list.
+Home Assistant serves anything in `/config/www/` at `http://<your-ha>/local/`.
+Hosting the page there makes it **same-origin** with the API — no CORS
+configuration and no mixed-content problem, because the page and the API share
+the same host, port and protocol.
 
-### Enable GitHub Pages
+1. Copy `docs/index.html` to `/config/www/control_hub/index.html` (File editor,
+   Samba, or SSH — however you normally manage `/config`).
+2. Open `http://<your-ha-ip-or-hostname>:8123/local/control_hub/`. The
+   "Home Assistant URL" field is prefilled to the page's own address — leave
+   it as is.
+3. **Developer Tools → Actions →** run `control_hub.create_pairing_code` to
+   get an 8-character code (valid 5 minutes, single use), enter it, **Pair**.
 
-Repo **Settings → Pages → Source: Deploy from a branch → `main` / `/docs`**.
-The site is then at `https://homeasstantli.github.io/ha-control-hub/`.
+That's it — no `configuration.yaml` changes needed for this path. The page
+works from any device on your network that can reach Home Assistant (phone,
+tablet, another computer) at that same `/local/control_hub/` URL.
 
-### Make the browser reach Home Assistant
+### Alternative: GitHub Pages
 
-The page and HA are different origins, so:
+Hosting the same file externally (`https://homeasstantli.github.io/ha-control-hub/`,
+via **Settings → Pages → Source: `main` / `/docs`**) works too, but the page
+and HA are then different origins:
 
-* **CORS** — add your Pages origin to `configuration.yaml` and restart HA:
+* **CORS** — add the Pages origin to `configuration.yaml` and restart HA:
 
   ```yaml
   http:
@@ -121,14 +126,16 @@ The page and HA are different origins, so:
   ```
 
 * **Mixed content** — a page served over `https://` (GitHub Pages) cannot call
-  a plain `http://homeassistant.local:8123`. Your options:
-  * Access Home Assistant over HTTPS (reverse proxy / Nabu Casa URL) and use
-    that URL when pairing, **or**
-  * Run the page locally instead of on Pages:
-    `cd docs && python3 -m http.server 8000`, open
-    `http://localhost:8000`, and pair with `http://localhost:8123`
-    (browsers allow `https`/`localhost` exceptions — and here both are local),
-    adding `http://localhost:8000` to `cors_allowed_origins`.
+  a plain `http://homeassistant.local:8123`; you'd need Home Assistant behind
+  HTTPS (reverse proxy / Nabu Casa) to pair from the public URL. The `/local/`
+  method above avoids this entirely, so it's the one to use unless you
+  specifically want the page reachable from outside your network.
+
+### One-time pairing, either way
+
+The token belongs to a dedicated non-admin **"Control Hub Web"** user
+(auto-created on first use). Revoke access any time from that user's page in
+**Settings → People**, or from its token list.
 
 ## Data model
 

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 128" width="640" height="128">
+  <rect width="128" height="128" rx="28" fill="#2563EB"/>
+  <g transform="translate(26 26) scale(0.253)" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round">
+    <line x1="150" y1="150" x2="150" y2="48"/>
+    <line x1="150" y1="150" x2="238" y2="99"/>
+    <line x1="150" y1="150" x2="238" y2="201"/>
+    <line x1="150" y1="150" x2="150" y2="252"/>
+    <line x1="150" y1="150" x2="62" y2="201"/>
+    <line x1="150" y1="150" x2="62" y2="99"/>
+  </g>
+  <g transform="translate(26 26) scale(0.253)" fill="#FFFFFF">
+    <circle cx="150" cy="150" r="34"/>
+    <circle cx="150" cy="48" r="16"/>
+    <circle cx="238" cy="99" r="16"/>
+    <circle cx="238" cy="201" r="16"/>
+    <circle cx="150" cy="252" r="16"/>
+    <circle cx="62" cy="201" r="16"/>
+    <circle cx="62" cy="99" r="16"/>
+  </g>
+  <text x="156" y="60" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+        font-size="40" font-weight="700" fill="#1C1E21">Control Hub</text>
+  <text x="157" y="90" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+        font-size="16" font-weight="500" fill="#6B7280" letter-spacing="0.3">Home Assistant · Firebase</text>
+</svg>
