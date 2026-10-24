@@ -8,93 +8,153 @@
   :root {
     --bg: #f4f5f7;
     --card: #ffffff;
+    --tile: #ffffff;
     --text: #1c1e21;
     --muted: #6b7280;
     --border: #e2e4e8;
     --accent: #2563eb;
+    --accent-soft: #eaf0fe;
     --accent-text: #ffffff;
     --danger: #b91c1c;
     --ok: #15803d;
-    --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #14161a;
-      --card: #1e2127;
-      --text: #e6e7e9;
-      --muted: #9aa0a6;
-      --border: #2c2f36;
-      --accent: #3b82f6;
-      --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+      --bg: #121317;
+      --card: #1b1d23;
+      --tile: #1b1d23;
+      --text: #e8e9eb;
+      --muted: #94999f;
+      --border: #2a2d34;
+      --accent: #5b8dff;
+      --accent-soft: #1e2a4a;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
     }
   }
-  * { box-sizing: border-box; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body {
     margin: 0;
     background: var(--bg);
     color: var(--text);
     font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
-  main { max-width: 620px; margin: 0 auto; padding: 20px 16px 64px; }
-  h1 { font-size: 20px; margin: 0 0 4px; }
-  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em;
-       color: var(--muted); margin: 24px 0 8px; }
-  p.sub { color: var(--muted); margin: 0 0 20px; }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; }
+
+  .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+  .brand svg { flex: none; border-radius: 9px; }
+  .brand h1 { font-size: 22px; margin: 0; letter-spacing: -0.01em; }
+  p.sub { color: var(--muted); margin: 2px 0 24px 48px; font-size: 14px; }
+
+  h2 {
+    font-size: 12px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); margin: 28px 2px 10px; font-weight: 700;
+  }
+  h2:first-of-type { margin-top: 4px; }
+
   .card {
     background: var(--card); border: 1px solid var(--border);
-    border-radius: 12px; box-shadow: var(--shadow); padding: 16px;
+    border-radius: 16px; box-shadow: var(--shadow); padding: 20px;
   }
-  label { display: block; font-weight: 600; margin: 12px 0 4px; font-size: 13px; }
+  label { display: block; font-weight: 600; margin: 14px 0 6px; font-size: 13px; }
   input[type=text], input[type=url] {
-    width: 100%; padding: 10px 12px; font-size: 15px;
-    border: 1px solid var(--border); border-radius: 8px;
+    width: 100%; padding: 11px 13px; font-size: 15px;
+    border: 1px solid var(--border); border-radius: 10px;
     background: var(--bg); color: var(--text);
   }
-  input#code { letter-spacing: .25em; text-transform: uppercase; font-family: ui-monospace, monospace; }
+  input[type=text]:focus, input[type=url]:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  input#code { letter-spacing: .3em; text-transform: uppercase; font-family: ui-monospace, monospace; }
   button {
     font: inherit; font-weight: 600; cursor: pointer;
-    border: 1px solid var(--border); border-radius: 8px;
-    background: var(--card); color: var(--text); padding: 9px 14px;
+    border: 1px solid var(--border); border-radius: 10px;
+    background: var(--card); color: var(--text); padding: 10px 16px;
   }
   button.primary { background: var(--accent); color: var(--accent-text); border-color: transparent; }
   button:disabled { opacity: .5; cursor: default; }
-  .row {
-    display: flex; align-items: center; gap: 12px;
-    padding: 12px 14px; border: 1px solid var(--border);
-    border-radius: 10px; background: var(--card); margin-bottom: 8px;
-    box-shadow: var(--shadow);
+
+  .topbar { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .topbar .grow { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .topbar .grow b { color: var(--text); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+    gap: 10px;
   }
-  .row .name { flex: 1; min-width: 0; }
-  .row .name b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .row .name span { color: var(--muted); font-size: 12px; }
-  .bright { width: 100%; margin-top: 8px; accent-color: var(--accent); }
-  .switch { position: relative; width: 46px; height: 26px; flex: none; }
+  .tile {
+    position: relative;
+    background: var(--tile); border: 1px solid var(--border);
+    border-radius: 18px; padding: 14px; box-shadow: var(--shadow);
+    display: flex; flex-direction: column; gap: 14px;
+    cursor: pointer; user-select: none;
+    transition: background .15s, border-color .15s;
+  }
+  .tile.on { background: var(--accent-soft); border-color: var(--accent); }
+  .tile .top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .icon {
+    width: 40px; height: 40px; border-radius: 12px; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--border); color: var(--muted);
+    transition: background .15s, color .15s;
+  }
+  .tile.on .icon { background: var(--accent); color: #fff; }
+  .icon svg { width: 22px; height: 22px; }
+
+  .switch { position: relative; width: 42px; height: 24px; flex: none; }
   .switch input { opacity: 0; width: 0; height: 0; }
   .slider {
     position: absolute; inset: 0; background: var(--border);
     border-radius: 999px; transition: background .15s;
   }
   .slider::before {
-    content: ""; position: absolute; height: 20px; width: 20px; left: 3px; top: 3px;
+    content: ""; position: absolute; height: 18px; width: 18px; left: 3px; top: 3px;
     background: #fff; border-radius: 50%; transition: transform .15s;
   }
   .switch input:checked + .slider { background: var(--accent); }
-  .switch input:checked + .slider::before { transform: translateX(20px); }
-  .topbar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-  .topbar .grow { flex: 1; }
-  .msg { padding: 10px 12px; border-radius: 8px; font-size: 14px; margin: 12px 0; }
+  .switch input:checked + .slider::before { transform: translateX(18px); }
+
+  .tile .name { font-weight: 600; font-size: 14px; line-height: 1.25;
+    overflow: hidden; text-overflow: ellipsis; display: -webkit-box;
+    -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .tile .state { color: var(--muted); font-size: 12px; margin-top: -8px; }
+
+  .bright { width: 100%; accent-color: var(--accent); margin: 0; }
+
+  .msg { padding: 10px 14px; border-radius: 10px; font-size: 14px; margin: 12px 0; }
   .msg.err { background: rgba(185,28,28,.12); color: var(--danger); }
-  .msg.warn { background: rgba(202,138,4,.14); color: #a16207; }
   .msg.ok { background: rgba(21,128,61,.12); color: var(--ok); }
-  code { font-family: ui-monospace, monospace; background: var(--bg); padding: 1px 5px; border-radius: 4px; }
-  footer { color: var(--muted); font-size: 12px; margin-top: 32px; text-align: center; }
+  code { font-family: ui-monospace, monospace; background: var(--bg); padding: 1px 6px; border-radius: 4px; }
+  .empty { color: var(--muted); font-size: 14px; padding: 8px 2px 0; }
+  footer { color: var(--muted); font-size: 12px; margin-top: 40px; text-align: center; }
   a { color: var(--accent); }
 </style>
 </head>
 <body>
 <main>
-  <h1>Control Hub</h1>
-  <p class="sub">Control your Home Assistant lights &amp; switches with a one-time code.</p>
+  <div class="brand">
+    <svg width="36" height="36" viewBox="0 0 512 512" aria-hidden="true">
+      <rect width="512" height="512" rx="112" fill="#2563eb"/>
+      <g transform="translate(106 106)" stroke="#fff" stroke-width="16" stroke-linecap="round">
+        <line x1="150" y1="150" x2="150" y2="48"/>
+        <line x1="150" y1="150" x2="238" y2="99"/>
+        <line x1="150" y1="150" x2="238" y2="201"/>
+        <line x1="150" y1="150" x2="150" y2="252"/>
+        <line x1="150" y1="150" x2="62" y2="201"/>
+        <line x1="150" y1="150" x2="62" y2="99"/>
+      </g>
+      <g fill="#fff">
+        <circle cx="150" cy="150" r="36"/>
+        <circle cx="150" cy="48" r="18"/>
+        <circle cx="238" cy="99" r="18"/>
+        <circle cx="238" cy="201" r="18"/>
+        <circle cx="150" cy="252" r="18"/>
+        <circle cx="62" cy="201" r="18"/>
+        <circle cx="62" cy="99" r="18"/>
+      </g>
+    </svg>
+    <h1>Control Hub</h1>
+  </div>
+  <p class="sub">Lights &amp; switches, controlled with a one-time code.</p>
 
   <!-- SETUP -->
   <section id="setup" class="card" hidden>
@@ -107,12 +167,12 @@
     <div style="margin-top:14px; display:flex; gap:8px;">
       <button class="primary" id="pairBtn">Pair</button>
     </div>
-    <p class="sub" style="margin-top:16px; font-size:13px;">
+    <p class="sub" style="margin:16px 0 0; font-size:13px;">
       In Home Assistant, run the action
       <code>control_hub.create_pairing_code</code> (Developer Tools → Actions) to
       get a code. It is valid for 5 minutes.
     </p>
-    <p class="sub" style="font-size:12px;">
+    <p class="sub" style="font-size:12px; margin-bottom:0;">
       The URL above is prefilled to this page's own address — if this page is
       served from Home Assistant's <code>/local/</code> folder, leave it as is.
     </p>
@@ -142,6 +202,11 @@
   const $ = (id) => document.getElementById(id);
   let session = null;      // { baseUrl, token }
   let timer = null;
+
+  const ICONS = {
+    light: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2Z"/></svg>',
+    switch: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="10" rx="5"/><circle cx="16" cy="12" r="3" fill="currentColor" stroke="none"/></svg>',
+  };
 
   const load = () => {
     try { return JSON.parse(localStorage.getItem(LS_KEY) || "null"); }
@@ -237,58 +302,86 @@
     return (s.attributes && s.attributes.friendly_name) || s.entity_id;
   }
 
-  function renderRow(s) {
+  function renderTile(s) {
     const domain = s.entity_id.split(".")[0];
     const on = s.state === "on";
-    const row = document.createElement("div");
-    row.className = "row";
 
-    const name = document.createElement("div");
-    name.className = "name";
-    name.innerHTML = `<b></b><span>${s.entity_id} · ${s.state}</span>`;
-    name.querySelector("b").textContent = friendly(s);
+    const tile = document.createElement("div");
+    tile.className = "tile" + (on ? " on" : "");
+
+    const top = document.createElement("div");
+    top.className = "top";
+
+    const icon = document.createElement("div");
+    icon.className = "icon";
+    icon.innerHTML = ICONS[domain] || ICONS.switch;
 
     const sw = document.createElement("label");
     sw.className = "switch";
     const cb = document.createElement("input");
     cb.type = "checkbox";
     cb.checked = on;
+    cb.addEventListener("click", (e) => e.stopPropagation());
     cb.addEventListener("change", () => toggle(domain, s.entity_id, cb));
     const sl = document.createElement("span");
     sl.className = "slider";
     sw.append(cb, sl);
 
-    row.append(name, sw);
+    top.append(icon, sw);
+
+    const name = document.createElement("div");
+    name.className = "name";
+    name.textContent = friendly(s);
+
+    const state = document.createElement("div");
+    state.className = "state";
+    state.textContent = on && s.attributes.brightness
+      ? Math.round((s.attributes.brightness / 255) * 100) + "%"
+      : (on ? "On" : "Off");
+
+    tile.append(top, name, state);
+
+    tile.addEventListener("click", () => {
+      cb.checked = !cb.checked;
+      toggle(domain, s.entity_id, cb);
+    });
 
     if (domain === "light") {
-      const wrap = document.createElement("div");
-      wrap.style.width = "100%";
       const rng = document.createElement("input");
       rng.type = "range"; rng.min = "1"; rng.max = "100"; rng.className = "bright";
       rng.value = on && s.attributes.brightness
         ? Math.round((s.attributes.brightness / 255) * 100) : (on ? 100 : 1);
       rng.disabled = !on;
+      rng.addEventListener("click", (e) => e.stopPropagation());
       let t;
       rng.addEventListener("input", () => {
         clearTimeout(t);
         t = setTimeout(() => setBrightness(s.entity_id, rng.value), 250);
       });
-      wrap.append(row, rng);
-      return wrap;
+      tile.append(rng);
     }
-    return row;
+
+    return tile;
   }
 
-  function renderList(containerId, heading, states) {
+  function renderSection(containerId, heading, states) {
     const c = $(containerId);
     c.innerHTML = "";
-    if (!states.length) return;
     const h = document.createElement("h2");
     h.textContent = heading;
-    c.append(h);
+    const grid = document.createElement("div");
+    grid.className = "grid";
+    if (!states.length) {
+      const empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = "None found.";
+      c.append(h, empty);
+      return;
+    }
     states
       .sort((a, b) => friendly(a).localeCompare(friendly(b)))
-      .forEach((s) => c.append(renderRow(s)));
+      .forEach((s) => grid.append(renderTile(s)));
+    c.append(h, grid);
   }
 
   async function refresh() {
@@ -297,10 +390,10 @@
       const states = await api("/api/states");
       const lights = states.filter((s) => s.entity_id.startsWith("light."));
       const switches = states.filter((s) => s.entity_id.startsWith("switch."));
-      renderList("lights", "Lights", lights);
-      renderList("switches", "Switches", switches);
+      renderSection("lights", "Lights", lights);
+      renderSection("switches", "Switches", switches);
       msg($("controlMsg"), "", "");
-      $("haInfo").textContent = session.baseUrl;
+      $("haInfo").innerHTML = "Connected to <b>" + session.baseUrl + "</b>";
     } catch (e) {
       if (e.message === "unauthorized") {
         msg($("setupMsg"), "The saved token was rejected. Pair again.");
